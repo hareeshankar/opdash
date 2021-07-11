@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 #import matplotlib.pyplot as plt
 import plotly.express as px
+import plotly.graph_objects as go
 from smartapi import SmartConnect #or from smartapi.smartConnect import SmartConnect
 #import smartapi.smartExceptions(for smartExceptions)
 external_stylesheets=['styles.css']
@@ -130,6 +131,7 @@ Output('Spot','children'),
 Input('instru','value')
 )
 def update_spot(instru):
+    app.logger.info(instru)
     if instru is not None:
         dfspot = df[df['name']==instru]
         dfspot = dfspot[dfspot['exch_seg']=="NSE"]
@@ -250,10 +252,14 @@ def add_row(n_clicks, rows, columns, BS, EX, ST, CP, Spot,Pre,lots,QTY,price):
             app.logger.info(row)
             app.logger.info(cols)
             dict1={}
-            for i in range(len(row)):
-                #data1.append({cols[i]:row[i]})
-                dict1[cols[i]]=row[i]
-            app.logger.info([dict1])
+            if float(row[5]) != 0.0:
+                for i in range(len(row)):
+                    #data1.append({cols[i]:row[i]})
+                    dict1[cols[i]]=row[i]
+                app.logger.info([dict1])
+            else:
+                return None
+
             #data1=pd.DataFrame(dict1)
             #data1.append({c['id']: row[i] for i, c in zip(range(len(row)),columns)},ignore_index=True)
             if rows is None:
@@ -372,30 +378,63 @@ def display_output(rows, columns,Spot):
     ######################## Max prof Max Loss Calculation ####
     maxpf = dfpffinal['pf'].max()
     minpf = dfpffinal['pf'].min()
+    rymin = 0
+    rymax = 0
     pflen = len(dfpffinal['pf'])
     dfmxind = dfpffinal.index[(dfpffinal['pf'] == maxpf)].tolist()
     dfmnind = dfpffinal.index[(dfpffinal['pf'] == minpf)].tolist()
     if len(dfmxind) > 1:
         mprof = mprof + str("{:.2f}".format(maxpf))
+        rymax = maxpf*2
     else:
         if (dfpffinal['pf'].iloc[0]==maxpf or dfpffinal['pf'].iloc[pflen-1]==maxpf):
             mprof = mprof + "Unlimited"
+            rymax = maxpf * .25
         else:
             mprof = mprof + str("{:.2f}".format(maxpf))
+            rymax = maxpf * 2
     if len(dfmnind) > 1:
         mloss = mloss + str("{:.2f}".format(minpf))
+        rymin = minpf*2
     else:
         if (dfpffinal['pf'].iloc[0]==minpf or dfpffinal['pf'].iloc[pflen-1]==minpf):
             mloss = mloss + "Unlimited"
+            rymin = minpf * .25
         else:
             mloss = mloss + str("{:.2f}".format(minpf))
+            rymin = minpf * 2
     ############################ Create Figure object ####
     if len(dfind) > 0:
-        fig = px.line(
-        x=sT, y=pfrnd,
-        title="Strategy Payoff",template="none"
-        )
-        fig.update_yaxes(zerolinecolor="#123")
+        #fig = px.line(
+        #x=sT, y=pfrnd,
+        #title="Strategy Payoff",template="none"
+        #)
+        #fig.update_yaxes(zerolinecolor="#123")
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=sT, y=pfrnd,
+                    mode='lines',
+                    name='Expiry Payoff',
+                    line=dict(color='crimson', width=2)
+                    ))
+        fig.update_layout(title='Strategy Payoff',
+                   xaxis_title='Underlying Price',
+                   yaxis_title='Profit / Loss',
+                   template='none',
+                   autosize=False,
+                   margin=dict(
+                        autoexpand=False,
+                        l=50,
+                        r=20,
+                        t=50,
+                    )
+                   )
+        fig.update_xaxes(showgrid=True)
+        fig.update_yaxes(showgrid=True)
+        fig.update_xaxes(range=[sptfloat*.5, sptfloat*1.5])
+        fig.update_yaxes(range=[rymin,rymax])
+        app.logger.info("rymin + rymax ")
+        app.logger.info(rymin)
+        app.logger.info(rymax)
     else:
         fig = px.line(
         x=newsT, y=newPF,
