@@ -24,6 +24,13 @@
   align-items: left;
   justify-content: left;
 }
+.inforow {
+  display: flex;
+  flex-direction: row;
+  align-items: left;
+  justify-content: left;
+  margin:10px;
+}
 .graph {
   display: flex;
   flex-direction: column;
@@ -32,4 +39,45 @@
   margin:10px;
   max-width: 100%;
   flex-grow: 1;
+}
+/* Alert Box CSS */
+
+/* Base Alert Style */
+.alert {
+    position: relative;
+    display: block;
+    padding: 0.4em 0.4em;
+    font-size: 0.9em;
+    font-weight: 300;
+    line-height: 1.2;
+    text-align: left;
+    margin-left: 0.4em;
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+    background: transparent;
+    color: white;
+    font-family: Tahoma, sans-serif;
+}
+
+/* Error */
+.alert-error {
+  background: #F44336;
+  border: 0px solid #c0392b;
+}
+
+/* Success */
+.alert-success {
+  background: #8BC34A;
+  border: 0px solid #27ae60;
+}
+
+/* Info */
+.alert-info {
+  background: #3F51B5;
+  border: 0px solid #2980b9;
+}
+
+/* Radius */
+.radius {
+  border-radius: 3px;
 }
