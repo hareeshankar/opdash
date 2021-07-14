@@ -20,9 +20,11 @@ app = dash.Dash(__name__,external_stylesheets=external_stylesheets)
 server = app.server
 
 #SmartConnect
-obj=SmartConnect(api_key="YZQSSF4H ")
+obj=SmartConnect(api_key="YgL9sShX")
 #login api call
 data = obj.generateSession("SPPA1005","QWEASD@01")
+app.logger.info("Session Data")
+app.logger.info(data)
 refreshToken= data['data']['refreshToken']
 #print(refreshToken)
 #fetch the feedtoken
@@ -142,7 +144,11 @@ def update_spot(instru):
         ltptokendf = dfspot[dfspot["symbol"]==ltpsymbol]
         ltptokendf = ltptokendf["token"]
         ltptoken = ltptokendf.values[0]
+        app.logger.info("Ltp Symbol - Token")
+        app.logger.info(ltpsymbol)
+        app.logger.info(ltptoken)
         response = obj.ltpData("NSE",ltpsymbol,ltptoken)
+        app.logger.info(response)
         ltp = response["data"]["ltp"]
         return ("Spot Price : " + str(ltp))
     else:
@@ -252,14 +258,27 @@ def add_row(n_clicks, rows, columns, BS, EX, ST, CP, Spot,Pre,lots,QTY,price):
             app.logger.info(row)
             app.logger.info(cols)
             dict1={}
-            if float(row[5]) != 0.0:
-                for i in range(len(row)):
-                    #data1.append({cols[i]:row[i]})
-                    dict1[cols[i]]=row[i]
-                app.logger.info([dict1])
-            else:
-                return None
+            app.logger.info(row[5])
+            app.logger.info(type(row[5]))
+            app.logger.info(row[1])
+            app.logger.info(type(row[1]))
 
+            if row[0] is not None and row[1] is not None and row[1] != "":
+                if row[0] != "" and float(row[1]) != 0.0 and row[5] != "":
+                    for i in range(len(row)):
+                        #data1.append({cols[i]:row[i]})
+                        dict1[cols[i]]=row[i]
+                    app.logger.info([dict1])
+                else:
+                    if rows is None:
+                        return none
+                    else:
+                        return rows
+            else:
+                if rows is None:
+                    return none
+                else:
+                    return rows
             #data1=pd.DataFrame(dict1)
             #data1.append({c['id']: row[i] for i, c in zip(range(len(row)),columns)},ignore_index=True)
             if rows is None:
@@ -359,21 +378,28 @@ def display_output(rows, columns,Spot):
     dfpayf.to_csv('dfpayf.csv')
     #dfind = dfpayf.index[(dfpayf['pf'] > -1) & (dfpayf['pf'] < 1)].tolist()
     dfind = dfpfrnd.index[(dfpfrnd['pf'] == 0)].tolist()
-    if len(dfind) > 0:
-        for x in dfind:
-            bflt =dfpfrnd['sT'].iloc[x]
-            brkstr = str("{:.2f}".format(bflt))
-            brke = brke + brkstr + " "
-        app.logger.info('brke ' + brke)
-        dfpffinal=dfpfrnd
+    is_all_zero = not np.any(PAYOFF)
+    app.logger.info("is_all_zero")
+    app.logger.info(is_all_zero)
+    if is_all_zero:
+        brke = brke + " "
     else:
-        dfind = dfpayf.index[(dfpayf['pf'] == 0)].tolist()
-        for x in dfind:
-            bflt =dfpayf['sT'].iloc[x]
-            brkstr = str("{:.2f}".format(bflt))
-            brke = brke + brkstr + " "
-        app.logger.info('brke ' + brke)
-        dfpffinal=dfpayf
+        #print('Array has non-zero items too')
+        if len(dfind) > 0:
+            for x in dfind:
+                bflt =dfpfrnd['sT'].iloc[x]
+                brkstr = str("{:.2f}".format(bflt))
+                brke = brke + brkstr + " "
+            #app.logger.info('brke ' + brke)
+            dfpffinal=dfpfrnd
+        else:
+            dfind = dfpayf.index[(dfpayf['pf'] == 0)].tolist()
+            for x in dfind:
+                bflt = dfpayf['sT'].iloc[x]
+                brkstr = str("{:.2f}".format(bflt))
+                brke = brke + brkstr + " "
+            app.logger.info('brke ' + brke)
+            dfpffinal=dfpayf
 
     ######################## Max prof Max Loss Calculation ####
     maxpf = dfpffinal['pf'].max()
